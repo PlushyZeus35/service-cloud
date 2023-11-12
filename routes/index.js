@@ -2,10 +2,12 @@ var express = require('express');
 var router = express.Router();
 const DiscordController = require('../helpers/discord');
 const NotionUtils = require('../helpers/notion');
+const GithubUtils = require('../helpers/github')
 
 /* GET Index page. */
 router.get('/', (req, res) => {
 	res.json({status: true})
+	GithubUtils.createIssue('tEST2 ASF', 'DESCRIPCION DEL ISSUE');
 });
 
 router.post('/alert', async(req, res) => {
@@ -14,6 +16,36 @@ router.post('/alert', async(req, res) => {
 	//console.log(response)
     res.send(response);
 });
+
+router.post('/issue', async(req, res) => {
+	const {title, description} = req.body;
+	const response = await GithubUtils.createIssue(title, description);
+	res.json(response);
+})
+
+router.get('/syncIssues', async(req, res) => {
+	const tickets = await NotionUtils.getNotionTecnicTickets();
+	const result = tickets.results;
+	for(const ticket of result){
+		// Retrieve info form notion ticket
+		const ticketId = ticket.id;
+		const githubIssueId = ticket.properties.IssueID.rich_text;//[0].text.content;
+		const ticketTitle = ticket.properties.Alerta.title[0].text.content;
+		const ticketDescription = ticket.properties.Descripcion.rich_text[0].text.content;
+		// Github issue property is empty
+		if(githubIssueId.length==0){
+			// Create issue in Github
+			const githubIssue = await GithubUtils.createIssue(ticketTitle, ticketDescription, ['Notion']);
+			// Issue creation successful
+			if(githubIssue.status==201){
+				// Update Notion record with issue number
+				const issueId = githubIssue.data.number;
+				await NotionUtils.updateTicketIssueId(ticketId, issueId);
+			}
+		}
+	}
+	res.json(tickets)
+})
 
 router.get('/discord', async (req, res) => {
 	console.log('ds');

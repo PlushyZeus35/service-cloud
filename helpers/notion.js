@@ -39,4 +39,28 @@ NotionUtils.setNewAlert = (title, description) => {
         
 }
 
+NotionUtils.getNotionTecnicTickets = () => {
+	const filter = {
+		property: "Tecnica",
+		checkbox: {
+		  equals: true,
+		},
+	}
+	return notion.databases.query({
+		database_id: NOTION_ALERT_DB,
+		filter: filter
+	  })
+}
+
+NotionUtils.updateTicketIssueId = (pageId, issueId) => {
+	return notion.pages.update({
+		page_id: pageId,
+		properties: {
+		  IssueID: {
+			rich_text: [{text: {content: issueId.toString()}}],
+		  },
+		},
+	  });
+}
+
 module.exports = NotionUtils;
