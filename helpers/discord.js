@@ -72,10 +72,19 @@ DiscordController.sendEmbedMessage = async function(){
   		await channel.send({ embeds: [exampleEmbed] });
 }
 
-DiscordController.sendQuote = async function(){
+DiscordController.sendQuote = async function(issueId, issueLink, issueTitle, issueDescription){
+	description = 'Se ha abierto la incidencia #' + issueId + ' en Github!'
 	const embed = new EmbedBuilder()
 	.setColor('#ff0000')
-	.setDescription('<@&772162600275279883> Esto es un ejemplo de quote')
+	.setTitle('Nueva incidencia')
+	.setAuthor({ name: 'Service Cloud', iconURL: 'https://imgur.com/bw862LX.jpeg', url: 'https://github.com/PlushyZeus35/service-cloud' })
+	.setThumbnail('https://imgur.com/bw862LX.jpeg')
+	.setURL(issueLink)
+	.setDescription(description)
+	.addFields(
+		{ name: 'Titulo', value: issueTitle },
+		{ name: 'Descripción', value: issueDescription },
+	)
 	const channel = await client.channels.fetch('850879796401405952'); // Reemplaza con el ID del canal
   	await channel.send({ embeds: [embed] });
 }

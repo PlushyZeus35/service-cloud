@@ -29,18 +29,21 @@ router.get('/syncIssues', async(req, res) => {
 	for(const ticket of result){
 		// Retrieve info form notion ticket
 		const ticketId = ticket.id;
-		const githubIssueId = ticket.properties.IssueID.rich_text;//[0].text.content;
+		const githubIssueId = ticket.properties.IssueID.rich_text;
 		const ticketTitle = ticket.properties.Alerta.title[0].text.content;
 		const ticketDescription = ticket.properties.Descripcion.rich_text[0].text.content;
 		// Github issue property is empty
 		if(githubIssueId.length==0){
 			// Create issue in Github
 			const githubIssue = await GithubUtils.createIssue(ticketTitle, ticketDescription, ['Notion']);
+			const githubUrl = githubIssue.data.html_url;
 			// Issue creation successful
 			if(githubIssue.status==201){
 				// Update Notion record with issue number
 				const issueId = githubIssue.data.number;
 				await NotionUtils.updateTicketIssueId(ticketId, issueId);
+				// Send message to Discord
+				DiscordController.sendQuote(issueId, githubUrl, ticketTitle, ticketDescription);
 			}
 		}
 	}
