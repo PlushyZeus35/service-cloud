@@ -24,6 +24,7 @@ router.post('/issue', async(req, res) => {
 })
 
 router.get('/syncIssues', async(req, res) => {
+	const created = [];
 	const tickets = await NotionUtils.getNotionTecnicTickets();
 	const result = tickets.results;
 	for(const ticket of result){
@@ -44,10 +45,18 @@ router.get('/syncIssues', async(req, res) => {
 				await NotionUtils.updateTicketIssueId(ticketId, issueId);
 				// Send message to Discord
 				DiscordController.sendQuote(issueId, githubUrl, ticketTitle, ticketDescription);
+
+				const newTicket = {
+					title: ticketTitle,
+					description: ticketDescription,
+					githubIssue: issueId,
+					githubUrl: githubUrl
+				}
+				created.push(newTicket);
 			}
 		}
 	}
-	res.json(tickets)
+	res.json(created)
 })
 
 router.get('/discord', async (req, res) => {
